@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<style type="text/css">
+		html,body{margin:0;padding:0;width:100%;height:100%;}
+		body{font:14px weiruanyahei,FZYQJW,"微软雅黑",Tahoma,"\534E\6587\5B8B\4F53",arial;}
+		ul,li,ol,dl,dt{list-style: none;}
+		ul,ul li,ol,ol li,dl,dl dd,p{margin:0;padding:0;}
+		h1,h2,h3,h4,h5,h6,strong{margin:0;padding:0;font-style:normal;}
+		img{border:0}
+		em{ font-style: normal;}
+		#section-canvasPar{
+			position: absolute;
+			left: 0;
+			top: 0;
+			height: 100%;
+			width: 100%;
+		}
+		.u-people{
+			position: absolute;
+			bottom: 4%;
+			width: 4.26666667rem;
+			height: 8.36rem;
+			left: 50%;
+			margin-left: -2.13333333rem;
+			background-size: 2000% 100%;
+			background-position: 0 0;
+			z-index: 82;
+		}
+	</style>
+	<script type="text/javascript">
+		(function(doc,win){
+		    var docEl = doc.documentElement;
+		    var resizeEvt = "onorientationchange" in win ? "orientationchange" : "resize";
+		    var Timer = null;
+		    function recalc(){
+		        var clientWidth = docEl.clientWidth || win.innerWidth;
+		        //设计稿是640px
+		        var initSize = (clientWidth/640) * 100;
+		        var fontSize = clientWidth > 768 ? 120 : (initSize < 50 ? 50 : initSize);
+		        docEl.style.fontSize = fontSize + "px";
+		    }
+		    doc.addEventListener("DOMContendLoaded",recalc,false);
+
+		    //转屏
+		    win.addEventListener(resizeEvt,function(){
+		        clearTimeout(Timer);
+		        Timer = setTimeout(recalc,300)
+		    },false);
+
+		    //pageshow,缓存相关
+		    win.addEventListener("pageshow",function(e){
+		        if(e.persisted){
+		            clearTimeout(Timer);
+		            Timer = setTimeout(recalc,300)
+		        }
+		    },false);
+
+		    // 初始化
+		    recalc();
+
+		})(document,window);
+	</script>
+	<script src="js/three.js"></script>
+	<script src="js/tweenjs-0.6.2.min.js"></script>
+</head>	
+
+<body>
+	<section id="section-canvasPar"> 
+		<divi id="div-people" class="u-people"></div>
+	</section>
+	<script type="text/javascript">
+		(function(){
+			init();
+			function init()
+			{
+				//明星
+				var eDivPeople = document.getElementById("div-people");
+        		eDivPeople.style.backgroundImage = "url('img/people.png')";
+				var output = document.getElementById("section-canvasPar");
+				//场景
+				var scene = new THREE.Scene();
+				//相机
+				var camera = new THREE.PerspectiveCamera(40,750/1206,1,512);
+				camera.position.x = 0;
+				camera.position.y = 3;
+				camera.position.z = 10000;
+				camera.up.x = 0;
+				camera.up.y = 1;
+				camera.up.z = 0;
+				camera.lookAt({
+					x:0,
+					y:0,
+					z:0
+				});
+				scene.add(camera);
+				//渲染
+				var render = new THREE.WebGLRenderer();
+				render.setClearColor(0x201012);
+				render.setSize(750,1206);
+				render.domElement.style.width="100%";
+				render.domElement.style.height="100%";
+				output.appendChild(render.domElement);
+				//添加道路
+                var gemotryRoad = new THREE.PlaneGeometry(10,20);
+                var textureLoader = new THREE.TextureLoader();
+                textureLoader.crossOrigin = true;
+                var mapLoader = textureLoader.load("img/road.png",function(texture){
+                });
+                var materialRoad = new THREE.MeshBasicMaterial({
+                    map: mapLoader
+                });
+				var roadZ = 10000;
+				function fnAddMeshRoad()
+				{
+					var meshRoad = new THREE.Mesh(gemotryRoad,materialRoad);
+					meshRoad.material.transparent = true;
+					meshRoad.rotateX(Math.PI*1.5);
+					meshRoad.position.x = 0;
+					meshRoad.position.y = 0;
+					meshRoad.position.z = roadZ;
+					scene.add(meshRoad);
+					roadZ -=20;
+					if(roadZ>=0)
+					{
+						fnAddMeshRoad();
+					}
+				}
+				fnAddMeshRoad();
+				//添加墙壁
+				function fnSetScene1Wall() {
+	                var oGeometryScene1Wall = new THREE.PlaneGeometry(12, 48);
+	                var oGeometryScene2Wall = new THREE.PlaneGeometry(12, 48);
+	                var oGeometryScene3Wall = new THREE.PlaneGeometry(12, 48);
+	                var oTextureLoader = new THREE.TextureLoader();
+	                oTextureLoader.crossOrigin = true;
+	                var oMapScene1Wall = oTextureLoader.load("img/scene1wall.png");
+	                var oMapScene2Wall = oTextureLoader.load("img/scene2wall.png");
+	                var oMapScene3Wall = oTextureLoader.load("img/scene3wall.png");
+	                var oMaterialScene1Wall = new THREE.MeshBasicMaterial({
+	                    map: oMapScene1Wall
+	                });
+	                var oMaterialScene2Wall = new THREE.MeshBasicMaterial({
+	                    map: oMapScene2Wall
+	                });
+	                var oMaterialScene3Wall = new THREE.MeshBasicMaterial({
+	                    map: oMapScene3Wall
+	                });
+	                var nSceneWallLeftZ = 10000,
+	                nSceneWallRightZ = 10000,
+	                nSceneWallTopZ = 10000;
+                	fnAddScene1Wall();
+
+	                function fnAddScene1Wall() {
+	                    var oMeshScene1WallLeft = new THREE.Mesh(oGeometryScene1Wall, oMaterialScene1Wall);
+	                    oMeshScene1WallLeft.material.transparent = true;
+	                    oMeshScene1WallLeft.rotateX(Math.PI * 1.5);
+	                    oMeshScene1WallLeft.rotateY(Math.PI * 0.5);
+	                    oMeshScene1WallLeft.position.x = -5;
+	                    oMeshScene1WallLeft.position.y = 4;
+	                    oMeshScene1WallLeft.position.z = nSceneWallLeftZ;
+	                    scene.add(oMeshScene1WallLeft);
+	                    var oMeshScene1WallRight = new THREE.Mesh(oGeometryScene1Wall, oMaterialScene1Wall);
+	                    oMeshScene1WallRight.material.transparent = true;
+	                    oMeshScene1WallRight.rotateX(Math.PI * 1.5);
+	                    oMeshScene1WallRight.rotateY(Math.PI * 1.5);
+	                    oMeshScene1WallRight.position.x = 5;
+	                    oMeshScene1WallRight.position.y = 4;
+	                    oMeshScene1WallRight.position.z = nSceneWallRightZ;
+	                    scene.add(oMeshScene1WallRight);
+	                    var oMeshScene1WallTop = new THREE.Mesh(oGeometryScene1Wall, oMaterialScene1Wall);
+	                    oMeshScene1WallTop.material.transparent = true;
+	                    oMeshScene1WallTop.rotateX(Math.PI * 0.5);
+	                    oMeshScene1WallTop.rotateZ(Math.PI);
+	                    oMeshScene1WallTop.position.x = 0;
+	                    oMeshScene1WallTop.position.y = 10;
+	                    oMeshScene1WallTop.position.z = nSceneWallTopZ;
+	                    scene.add(oMeshScene1WallTop);
+	                    nSceneWallLeftZ -= 48;
+	                    nSceneWallRightZ -= 48;
+	                    nSceneWallTopZ -= 48;
+	                    if (nSceneWallLeftZ >= 9140 || nSceneWallRightZ >= 9140 || nSceneWallTopZ >= 9140) {
+	                        fnAddScene1Wall();
+	                    } else {
+	                        fnAddScene2Wall();
+	                    }
+	                }
+
+	                function fnAddScene2Wall(){
+	                    var oMeshScene2WallLeft = new THREE.Mesh(oGeometryScene2Wall, oMaterialScene2Wall);
+	                    oMeshScene2WallLeft.material.transparent = true;
+	                    oMeshScene2WallLeft.rotateX(Math.PI * 1.5);
+	                    oMeshScene2WallLeft.rotateY(Math.PI * 0.5);
+	                    oMeshScene2WallLeft.position.x = -5;
+	                    oMeshScene2WallLeft.position.y = 4;
+	                    oMeshScene2WallLeft.position.z = nSceneWallLeftZ;
+	                    scene.add(oMeshScene2WallLeft);
+	                    var oMeshScene2WallRight = new THREE.Mesh(oGeometryScene2Wall, oMaterialScene2Wall);
+	                    oMeshScene2WallRight.material.transparent = true;
+	                    oMeshScene2WallRight.rotateX(Math.PI * 1.5);
+	                    oMeshScene2WallRight.rotateY(Math.PI * 1.5);
+	                    oMeshScene2WallRight.position.x = 5;
+	                    oMeshScene2WallRight.position.y = 4;
+	                    oMeshScene2WallRight.position.z = nSceneWallRightZ;
+	                    scene.add(oMeshScene2WallRight);
+	                    var oMeshScene2WallTop = new THREE.Mesh(oGeometryScene2Wall, oMaterialScene2Wall);
+	                    oMeshScene2WallTop.material.transparent = true;
+	                    oMeshScene2WallTop.rotateX(Math.PI * 0.5);
+	                    oMeshScene2WallTop.rotateZ(Math.PI);
+	                    oMeshScene2WallTop.position.x = 0;
+	                    oMeshScene2WallTop.position.y = 10;
+	                    oMeshScene2WallTop.position.z = nSceneWallTopZ;
+	                    scene.add(oMeshScene2WallTop);
+	                    nSceneWallLeftZ -= 48;
+	                    nSceneWallRightZ -= 48;
+	                    nSceneWallTopZ -= 48;
+	                    if (nSceneWallLeftZ >= 8370 || nSceneWallRightZ >= 8370 || nSceneWallTopZ >= 8370) {
+	                        fnAddScene2Wall();
+	                    } else {
+	                        fnAddScene3Wall();
+	                    }
+                	}
+	                function fnAddScene3Wall() {
+	                    var oMeshScene3WallLeft = new THREE.Mesh(oGeometryScene3Wall, oMaterialScene3Wall);
+	                    oMeshScene3WallLeft.material.transparent = true;
+	                    oMeshScene3WallLeft.rotateX(Math.PI * 1.5);
+	                    oMeshScene3WallLeft.rotateY(Math.PI * 0.5);
+	                    oMeshScene3WallLeft.position.x = -5;
+	                    oMeshScene3WallLeft.position.y = 4;
+	                    oMeshScene3WallLeft.position.z = nSceneWallLeftZ;
+	                    scene.add(oMeshScene3WallLeft);
+	                    var oMeshScene3WallRight = new THREE.Mesh(oGeometryScene3Wall, oMaterialScene3Wall);
+	                    oMeshScene3WallRight.material.transparent = true;
+	                    oMeshScene3WallRight.rotateX(Math.PI * 1.5);
+	                    oMeshScene3WallRight.rotateY(Math.PI * 1.5);
+	                    oMeshScene3WallRight.position.x = 5;
+	                    oMeshScene3WallRight.position.y = 4;
+	                    oMeshScene3WallRight.position.z = nSceneWallRightZ;
+	                    scene.add(oMeshScene3WallRight);
+	                    var oMeshScene3WallTop = new THREE.Mesh(oGeometryScene3Wall, oMaterialScene3Wall);
+	                    oMeshScene3WallTop.material.transparent = true;
+	                    oMeshScene3WallTop.rotateX(Math.PI * 0.5);
+	                    oMeshScene3WallTop.rotateZ(Math.PI);
+	                    oMeshScene3WallTop.position.x = 0;
+	                    oMeshScene3WallTop.position.y = 10;
+	                    oMeshScene3WallTop.position.z = nSceneWallTopZ;
+	                    scene.add(oMeshScene3WallTop);
+	                    nSceneWallLeftZ -= 48;
+	                    nSceneWallRightZ -= 48;
+	                    nSceneWallTopZ -= 48;
+	                    if (nSceneWallLeftZ >= 7915 || nSceneWallRightZ >= 7915 || nSceneWallTopZ >= 7915) {
+	                        fnAddScene3Wall();
+	                    } else {}
+	             	}
+
+	                // var oGeometrySceneBg = new THREE.PlaneGeometry(450, 500);
+	                // oTextureLoader.crossOrigin = true;
+	                // oMapScene1Bg = oTextureLoader.load("img/scene1Bg.png");
+	                // oMapScene2Bg = oTextureLoader.load("img/scene2Bg.png");
+	                // oMapScene3Bg = oTextureLoader.load("img/scene3Bg.png");
+	                // oMapScene4Bg = oTextureLoader.load("img/scene4Bg.png");
+	                // oMaterialSceneBg = new THREE.MeshBasicMaterial({
+	                //     map: oMapScene1Bg
+	                // });
+	                // var oMeshSceneBg = new THREE.Mesh(oGeometrySceneBg, this.oMaterialSceneBg);
+	                // oMeshSceneBg.material.transparent = true;
+	                // oMeshSceneBg.position.x = 0;
+	                // oMeshSceneBg.position.y = 0;
+	                // oMeshSceneBg.position.z = camera.position.z - 500;
+	                // oMeshSceneBg = oMeshSceneBg;
+	                // scene.add(oMeshSceneBg);
+            	 } 
+	             fnSetScene1Wall();
+	             //跑步速度
+	             function fnSetPeopleSpeed() {
+	                var nLastCameraZ = camera.position.z,
+	                nNextCameraZ = camera.position.z;
+	                var sDirection = "front";
+	                var nFps = 0;
+	                var nDelay = 100;
+	                setTimeout(function fn() {
+	                    nNextCameraZ = camera.position.z;
+	                    nDelay = 1 / Math.abs(Math.floor(nNextCameraZ - nLastCameraZ || 1)) * 60 + 40;
+	                    if (nNextCameraZ - nLastCameraZ < 0) {
+	                        sDirection = "front";
+	                        eDivPeople.style.backgroundPosition = nFps--+"00% 100%";
+	                        if (nFps <= 0) {
+	                            nFps = 19;
+	                        }
+	                        nLastCameraZ = camera.position.z;
+	                    }
+	                    if (nNextCameraZ - nLastCameraZ > 0) {
+	                        sDirection = "back";
+	                        eDivPeople.style.backgroundPosition = nFps+++"00% 100%";
+	                        if (nFps >= 19) {
+	                            nFps = 0;
+	                        }
+	                        nLastCameraZ = This.oCamera.position.z;
+	                    }
+	                    if (nNextCameraZ - nLastCameraZ === 0) {
+	                        nNextCameraZ = camera.position.z;
+	                        if (sDirection === "front") {
+	                            eDivPeople.style.backgroundPosition = nFps--+"00% 100%";
+	                            if (nFps <= 0) {
+	                                nFps = 19;
+	                            }
+	                        } else if (sDirection === "back") {
+	                            eDivPeople.style.backgroundPosition = nFps+++"00% 100%";
+	                            if (nFps >= 19) {
+	                                nFps = 0;
+	                            }
+	                        }
+	                        nLastCameraZ = camera.position.z;
+	                    }
+	                    setTimeout(fn, nDelay);
+	                },
+	                nDelay);
+            	}
+            	fnSetPeopleSpeed();
+
+				function fnRender()
+				{
+					render.render(scene,camera);
+					requestAnimationFrame(fnRender);
+				}
+				fnRender();
+
+				setInterval(function(){
+					camera.position.z=camera.position.z -2.2;
+				},50);
+			}
+		})();
+
+	</script>
+</body>
+</html>
