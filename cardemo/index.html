@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+	<style type="text/css">
+		html,body{margin:0;padding:0;width:100%;height:100%;}
+		body{font:14px weiruanyahei,FZYQJW,"微软雅黑",Tahoma,"\534E\6587\5B8B\4F53",arial;}
+		ul,li,ol,dl,dt{list-style: none;}
+		ul,ul li,ol,ol li,dl,dl dd,p{margin:0;padding:0;}
+		h1,h2,h3,h4,h5,h6,strong{margin:0;padding:0;font-style:normal;}
+		img{border:0}
+		em{ font-style: normal;}
+		body{
+			background: black;
+		}
+		.car{
+			position: absolute;
+			left:50%;
+			top: 50%;
+			margin-left:-175px;
+			margin-top:-140px;
+		}
+	</style>
+	<script type="text/javascript">
+		// (function (doc, win) {
+		//      var docEl = doc.documentElement,
+		//      resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+		//      recalc = function () {
+		//      var clientWidth = docEl.clientWidth;
+		//      var clientHeight =docEl.clientHeight;
+		//      console.log(clientWidth);
+		//      if (!clientWidth) return;
+		//      docEl.style.fontSize = 100 * (clientWidth / 750) + 'px';
+		//      if(clientHeight<clientWidth){
+		//       docEl.style.fontSize = 100 * (clientWidth / 1334) + 'px';
+		//      }else{
+		//       docEl.style.fontSize = 100 * (clientWidth / 750) + 'px';
+		//       }
+		//      };
+
+		//     if (!doc.addEventListener) return;
+		//     win.addEventListener(resizeEvt, recalc, false);
+		//     doc.addEventListener('DOMContentLoaded', recalc, false);
+		// })(document, window);
+	</script>
+</head>
+<body>
+	<div id="car1" class="car" ></div>
+	<canvas id="car" class="car"></canvas>
+	<script type="text/javascript">
+		//图片预加载
+		function preloadImage(src,callback)
+		{
+			var img = new Image();
+			img.crossOrgin='Anonymous';
+			img.src = src;
+			img.addEventListener("load",function(e){
+				// img.width=350;
+				// img.height=280;
+				console.log(img);
+				if(typeof(callback) == "function")
+				{
+					callback(true);
+				}
+			});
+			img.addEventListener("error",function(e){
+				if(typeof(callback) == "function")
+				{
+					callback(false);
+				}
+			})
+			return img;
+		}
+
+		//预加载
+		function preload(callback)
+		{
+			var i=0;
+			var loadedCount = 0;
+			var count = 72;
+			var imgArr=[];
+			for(i;i<count;i++)
+			{
+
+				var src = 'imgs/bmw1/0000'+i+".jpg";
+				if(i>=10)
+				{
+					src = 'imgs/bmw1/000'+i+".jpg"
+				}
+				(function(src){
+					// imgArr.push(src);
+					imgArr.push(preloadImage(src,function(success){
+						if(success)
+						{
+							loadedCount++;
+							console.log("图片预加载进度："+loadedCount/count*100+"%");
+							if(loadedCount == count)
+							{
+								if(typeof(callback) == "function")
+								{
+									callback(true,imgArr);
+								}
+								console.log("图片预加载完成");
+							}
+						}else{
+							console.log("图片预加载失败："+src);
+							if(typeof(callback) == "function")
+							{
+								callback(false);
+							}
+						}
+					}));
+				})(src);
+			}
+		}
+
+		preload(function(success,result){
+			if(success && Object.prototype.toString.call(result) == "[object Array]")
+			{
+				var currentIndex = 0;
+				var car = document.getElementById("car");
+				car.width=result[currentIndex].width;
+				car.height=result[currentIndex].height;
+				var ctx = car.getContext("2d");
+				// ctx.scale(0.5,0.5);
+
+				 // car.style.backgroundImage="url("+result[currentIndex]+")";
+				ctx.drawImage(result[currentIndex],0,0);
+				var touchDownX = -10000;
+				var touchMoveX = -10000;
+				var interval = null;
+				function fnTouchstart(e){
+					document.body.removeEventListener("touchstart",fnTouchstart);
+					document.body.addEventListener("touchmove",fnTouchmove);
+					document.body.removeEventListener("touchend",fnTouchEnd);
+
+					if(null!=interval)
+						clearInterval(interval);
+				　　 touchDownX = e.changedTouches[0].clientX;
+					touchMoveX = -10000;
+					interval = setInterval(function(){
+						if(touchMoveX != -10000)
+						{
+							var delta = touchMoveX - touchDownX;
+							touchDownX = touchMoveX;
+							if(delta>0)
+							{
+								currentIndex -- ;
+							}else if (delta){
+								currentIndex ++ ;
+							}
+							if(currentIndex <0)
+							{
+								currentIndex = 71;
+							}
+							if(currentIndex >71){
+								currentIndex =0;
+							}
+							// car.style.backgroundImage="url("+result[currentIndex]+")";
+							ctx.drawImage(result[currentIndex],0,0);
+						}
+					},20);
+				}
+				function fnTouchmove(e){
+					var x = e.changedTouches[0].clientX;
+					touchMoveX = x;
+				}
+				function fnTouchEnd(e){
+					document.body.removeEventListener("touchend",fnTouchEnd);
+					document.body.removeEventListener("touchmove",fnTouchmove);
+					document.body.addEventListener("touchstart",fnTouchstart);
+					if(null!=interval)
+						clearInterval(interval);
+				}
+				document.body.addEventListener("touchstart",fnTouchstart);
+				// document.body.addEventListener("touchmove",fnTouchmove);
+				// document.body.addEventListener("touchend",fnTouchEnd);
+			}
+		});
+	</script>
+</body>
+</html>
