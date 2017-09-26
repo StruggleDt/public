@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+		<title></title>
+		<style type="text/css">
+			.imgbox{position:relative;width: 306px;height: 306px;margin:20px auto;border:2px solid #ccc;padding:2px;}
+			 .box{position:absolute;width:100px;height:100px;border:1px solid #999;background-image:url(img/bg.jpg);background-size: 300px 400px;transition: all .5s;}
+			#maskbox{display:none;position:absolute;top:0;left:0;bottom:0;right:0;background-color: rgba(0,0,0,.5);}
+			.mask-info{border-radius:30px; color:#333;font-size:30px;text-align:center;width: 200px;line-height:100px;height: 100px;margin:100px auto;background-color: rgba(255,255,255,.5);}
+		</style>
+	</head>
+	<body>
+		<h1>拼图游戏</h1>
+    <div> <button id="btn">开始</button></div>
+    <div class="imgbox" id="imgbox">
+        <div class="box" data-index="0" style="top:0px;left:0px;background-position:0px 0px">0</div>
+        <div class="box" data-index="1" style="top:0px;left:100px;background-position:-100px 0px">1</div>
+        <div class="box" data-index="2" style="top:0px;left:200px;background-position:-200px 0px">2</div>
+        <div class="box" data-index="3" style="top:100px;left:0px;background-position:0px -100px">3</div>
+        <div class="box" data-index="4" style="top:100px;left:100px;background-position:-100px -100px">4</div>
+        <div class="box" data-index="5" style="top:100px;left:200px;background-position:-200px -100px">5</div>
+        <div class="box" data-index="6" style="top:200px;left:0px;background-position:0px -200px">6</div>
+        <div class="box" data-index="7" style="top:200px;left:100px;background-position:-100px -200px">7</div>
+        <div class="box" data-index="8" style="top:200px;left:200px;background-position:-200px -200px">8</div>
+         <div class="box" data-index="9" style="top:300px;left:0px;background-position:0px -300px">9</div>
+        <div class="box" data-index="10" style="top:300px;left:100px;background-position:-100px -300px">10</div>
+        <div class="box" data-index="11" style="top:300px;left:200px;background-position:-200px -300px">11</div>
+    </div>
+    <div class="mask" id="maskbox">
+        <div class="mask-info">成功</div>
+    </div>
+    <script type="text/javascript">
+    	(function(){
+    		document.body.addEventListener('touchmove', function (event) {
+			    event.preventDefault();
+			}, false);
+        document.getElementById("btn").addEventListener("click",function(){
+            //打散
+            console.info("开始")
+            //要交换元素的left，top值。
+            //例如：直接a,b元素的位置
+            //交换 10对元素的位置
+            for(var i = 1;i<20;i++){
+                var a = Math.floor(Math.random()*1000) % 12;
+                var b = Math.floor(Math.random()*1000) % 12;
+            
+                console.info(a,b);
+                if(a != b){
+                    //交换boxs[a] 与boxs[b]
+                    //
+                    var _left = boxs[a].style.left;
+                    boxs[a].style.left = boxs[b].style.left;
+                    boxs[b].style.left = _left;
+
+                    var _top = boxs[a].style.top;
+                    boxs[a].style.top = boxs[b].style.top;
+                    boxs[b].style.top = _top;
+
+                    var _index= boxs[a].getAttribute("data-index");
+                    boxs[a].setAttribute("data-index",boxs[b].getAttribute("data-index"));
+                    boxs[b].setAttribute("data-index",_index);
+                }
+            }
+
+        })
+        var maskbox = document.getElementById("maskbox");
+        var boxs = document.querySelectorAll(".box");
+        var imgBox = document.getElementById('imgbox');
+        var info ={
+            x:0,y:0,top:0,left:0
+        }
+        for (var i = 0; i < boxs.length; i++) {
+            boxs[i].addEventListener("touchstart",function(e){
+                info.x = e.targetTouches[0].pageX;
+                info.y = e.targetTouches[0].pageY;
+                info.top = parseInt( this.style.top );
+                info.left = parseInt(  this.style.left );
+
+                //缓存起点位置  给元素加了两个属性
+                this.oriLeft = info.left;
+                this.oriTop = info.top;
+
+                //不要动画
+                this.style.transition="none";
+
+            });
+
+            boxs[i].addEventListener("touchmove",function(e){
+                //newTop - newY = top - Y
+                //newTop = top -y + newY
+                this.style["z-index"] = 1000;
+                var newTop = info.top - info.y + e.targetTouches[0].pageY;
+                var newLeft = info.left - info.x + e.targetTouches[0].pageX;
+
+                this.style.left = newLeft + "px";
+                this.style.top = newTop + "px";
+
+            });
+            boxs[i].addEventListener("touchend",function(e){
+                this.style.transition=" all .5s";
+                this.style["z-index"] = 0;
+                //对每 个元素进行检测
+                // x > 元素的.offsetLeft && x <元素的.offsetLeft+ 100
+                // y > 元素的.offsetTop && x <元素的.offsetTop+ 100
+                var x = e.changedTouches[0].pageX -imgBox.offsetLeft ,
+                    y = e.changedTouches[0].pageY -imgBox.offsetTop;
+                console.info(x,y);//.targetTouches[0].pageX,e.targetTouches[0].pageY);
+                //通过当前 x,y来找到应该要交换的元素是哪个？
+                var obj = findSwtichBox(this,x,y);
+
+                if(obj === this) { //不要交换元素
+                    //从哪里来就回到哪里去。
+                    obj.style.left = obj.oriLeft +"px";
+                    obj.style.top = obj.oriTop +"px";
+                }
+                else{
+                    swtichBoxs(this,obj);
+                    setTimeout(function(){
+                        if( isOk() ){//完成了
+                            //alert("ok");
+                            maskbox.style.display="block";
+                            
+                        }
+                    },600)
+
+                }
+                console.info(obj);    
+            });
+        }
+
+        function isOk(){
+
+            // 思路：对每一个box设置一个“序号”（data-index）属性。每次交换后，都检查一下当前的元素的顺序是否与成功的序号是一致的。
+            // 获取所有的元素的序号
+            var str ="";
+            for (var i = 0; i < boxs.length; i++) {
+                str += boxs[i].getAttribute("data-index");
+            }
+            console.info(str);
+            return str == "01234567891011";
+            
+        }
+        //交换a，b元素的位置
+        function swtichBoxs(oriEle,targetEle){
+//debugger;
+            // var a = 10;
+            // var b = 20;
+
+            var _top = oriEle.oriTop;                // var t = a;
+            oriEle.style.top = targetEle.style.top; // a = b;
+            targetEle.style.top = _top+"px";                // b = t;
+
+            //把targetEle的top设置为oriEle的oriTop;
+            var _left = oriEle.oriLeft;                // var t = a;
+            oriEle.style.left = targetEle.style.left; // a = b;
+            targetEle.style.left = _left+"px";                // b = t;
+            //console.info(a);
+            //console.info(b);
+            //
+            //交换data-index值
+            var _index= oriEle.getAttribute("data-index");
+            oriEle.setAttribute("data-index",targetEle.getAttribute("data-index"));
+            targetEle.setAttribute("data-index",_index);
+
+        }
+        //根据x,y的值，看当前的x，y落在box中的哪一个元素上。
+        function findSwtichBox(obj,x,y){
+            //自己不参与检查
+            
+            for (var i = 0; i < boxs.length; i++) {
+                if(obj !== boxs[i]){
+                    var t1 = x >  boxs[i].offsetLeft && x < (boxs[i].offsetLeft+ 100);
+                    var t2 = y >  boxs[i].offsetTop  && y < (boxs[i].offsetTop + 100);
+                    if(t1 && t2 ){
+                        //console.info(boxs[i]); 找到目标
+                        return boxs[i];
+                    }
+                }
+                
+            }
+            return obj; //没有找到目标，即返回自己
+        }
+    })();
+    </script>
+	</body>
+</html>
